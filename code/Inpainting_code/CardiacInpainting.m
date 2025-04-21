@@ -100,6 +100,43 @@ for phase=1:length(imglist)
     load(fullfile(masklist(phase).folder,masklist(phase).name));
     artifacts=(artifacts>0);
     artifacts = imdilate(artifacts,strel('disk',3,4));
+    % Denoising if wanted 
+    % Load in heart segmentation if denoising
+    %heartseg=(load(fullfile(HeartMasks)));
+    %heartseg(artifacts)=0;
+    %initialImgSize=size(img);
+    %DenoiseSlices=ceil(initialImgSize/4)*4;
+    %DenoiseImg=zeros(DenoiseSlices);
+    %stdval=std(single(img(heartseg)));
+    %stdvals = [0 12 18 25 30 36 50 75 200];
+    %denoise_kernel_size = [2 3.5 6 9 11 17 23 31 40];
+    %kernel_size = interp1(stdvals, denoise_kernel_size, stdval);
+    %fprintf('Noise level = %.1f, kernel size to use = %.2f.\n', stdval, kernel_size);
+    %if min(img(:))<-100
+    %    img_denoised = FFDNet_denoise_3D_CT(single(DenoiseImg)+1000, kernel_size,voxelsize, 'abdomen')-1000;
+    %else
+    %    img_denoised = FFDNet_denoise_3D_CT(single(DenoiseImg),kernel_size, voxelsize, 'abdomen');
+    %end
+    %noise=DenoiseImg-double(img_denoised);
+    %noise=noise(1:initialImgSize(1),1:initialImgSize(2),1:initialImgSize(3));
+    %noise=noise(heartseg);
+    %if length(noise)<initialImgSize(1)*initialImgSize(2)
+    %    rows=floor(length(noise)/initialImgSize(1));
+    %    noise=noise(1:initialImgSize(1)*rows);
+    %    noise=reshape(noise,[initialImgSize(1),rows]);
+    %    rows2=ceil(initialImgSize(2)/rows);
+    %    % while size(noise,2)
+    %    noise=repmat(noise,[1,rows2]);
+    %    noise=noise(:,1:initialImgSize(2));
+    %else
+    %    noise=noise(1:initialImgSize(1)*initialImgSize(2));
+    %    noise=reshape(noise,[initialImgSize(1), initialImgSize(2)]);
+    %end
+    %fullnoise=zeros(size(img));
+    %for slice=1:initialImgSize(3)
+    %    fullnoise(:,:,slice)=circshift(noise,[randi(initialImgSize(1)),randi(initialImgSize(2))]);
+    %end
+    % end denoising if not wanted
     cpts = GetPatientSamplePoints(img,artifacts,patch_size);
     inpainted=zeros(size(img));
     weights = zeros(size(img));
@@ -128,6 +165,9 @@ for phase=1:length(imglist)
     end
     inpainted = inpainted./weights;
     inpainted(~artifacts)=img(~artifacts);
+    %Add noise back if wanted
+    %inpaintedNoise=inpainted;
+    %inpaintedNoise(artifacts)=double(inpainted(artifacts))+double(fullnoise(artifacts);
     zerofill = img;
     zerofill(artifacts)=0;
     inpainted4d(:,:,:,phase)=inpainted;
